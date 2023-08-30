@@ -4,7 +4,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/JoaoDanielRufino/gcloc/pkg/sorter"
+	"github.com/colussim/go-cloc/pkg/sorter"
 	"github.com/olekukonko/tablewriter"
 )
 
