@@ -1,5 +1,6 @@
 package language
 
+
 type LanguageInfo struct {
 	LineComments      []string
 	MultiLineComments [][]string
