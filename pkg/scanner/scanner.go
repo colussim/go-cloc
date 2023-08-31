@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/colussim/go-cloc//pkg/analyzer"
+	"github.com/colussim/go-cloc/pkg/analyzer"
 	"github.com/colussim/go-cloc/pkg/gcloc/language"
 	"github.com/schollz/progressbar/v3"
 )
