@@ -29,10 +29,11 @@ func Getter(src string) (string, error) {
 	}
 
 	client := &getter.Client{
-		Src:  src,
-		Dst:  dst,
-		Pwd:  pwd,
-		Mode: getter.ClientModeAny,
+		Src: src,
+		Dst: dst,
+		Pwd: pwd,
+		//Mode: getter.ClientModeAny,
+		Mode: getter.ClientModeDir,
 	}
 
 	if err := client.Get(); err != nil {
