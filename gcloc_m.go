@@ -11,6 +11,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/colussim/go-cloc/internal/constants"
 	"github.com/colussim/go-cloc/pkg/devops/getgithub"
+	"github.com/colussim/go-cloc/pkg/devops/getgitlab"
 	"github.com/colussim/go-cloc/pkg/gcloc"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -37,6 +38,8 @@ type Report struct {
 	TotalCodeLines  int
 	Results         interface{}
 }
+
+const messagelog = "Error:"
 
 // Read Config file : Config.json
 func GetConfig(configjs Configuration) Configuration {
@@ -68,44 +71,13 @@ func parseJSONFile(filePath, reponame string) int {
 	return report.TotalCodeLines
 }
 
-func main() {
+func AnalyseReposList(DestinationResult string, AccessToken string, DevOps string, Organization string, repolist []getgithub.Repository) (cpt int) {
 
-	var config1 Configuration
-	var AppConfig = GetConfig(config1)
-	var largestLineCounter int
-	var nameRepos2 string
-	var cpt = 0
+	for _, repo := range repolist {
+		fmt.Printf("\nAnalyse Repository : %s\n", repo.Name)
 
-	pwd, err := os.Getwd()
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-	DestinationResult := pwd + "/Results"
-	if err := os.MkdirAll(DestinationResult, os.ModePerm); err != nil {
-		panic(err)
-	}
-
-	GlobalReport := DestinationResult + "/GobalReport.txt"
-	// Create Global Report File
-	file, err := os.Create(GlobalReport)
-	if err != nil {
-		fmt.Println("Error creating file:", err)
-		return
-	}
-	defer file.Close()
-
-	if len(AppConfig.Repos) != 0 {
-
-		repositories, err := getgithub.GetRepository(AppConfig.AccessToken, AppConfig.Organization, AppConfig.Repos)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		fmt.Printf("\nAnalyse Repository %s in Organization: %s\n", repositories.Name, AppConfig.Organization)
-
-		pathToScan := fmt.Sprintf("git::https://%s@%s.com/%s/%s", AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, AppConfig.Repos)
-		outputFileName := fmt.Sprintf("Result_%s", repositories.Name)
+		pathToScan := fmt.Sprintf("git::https://%s@%s.com/%s/%s", AccessToken, DevOps, Organization, repo.Name)
+		outputFileName := fmt.Sprintf("Result_%s", repo.Name)
 
 		params := gcloc.Params{
 			Path:              pathToScan,
@@ -127,51 +99,129 @@ func main() {
 
 		gc, err := gcloc.NewGCloc(params, constants.Languages)
 		if err != nil {
-			fmt.Println("Error:", err)
+			fmt.Println("\nError Analyse Repositories: ", err)
+			os.Exit(1)
 		}
+
 		gc.Run()
 		cpt++
 
-	} else {
-		repositories, err := getgithub.GetRepositoryList(AppConfig.AccessToken, AppConfig.Organization)
+	}
+	return cpt
+}
+
+func AnalyseRun(params gcloc.Params, reponame string) {
+	gc, err := gcloc.NewGCloc(params, constants.Languages)
+	if err != nil {
+		fmt.Println("\nError Analyse Repositories: ", err)
+		os.Exit(1)
+	}
+
+	gc.Run()
+}
+
+func AnalyseRepo(DestinationResult string, AccessToken string, DevOps string, Organization string, reponame string) (cpt int) {
+
+	pathToScan := fmt.Sprintf("git::https://%s@%s.com/%s/%s", AccessToken, DevOps, Organization, reponame)
+
+	outputFileName := fmt.Sprintf("Result_%s", reponame)
+	fmt.Println("URL :", pathToScan)
+	params := gcloc.Params{
+		Path:              pathToScan,
+		ByFile:            false,
+		ExcludePaths:      []string{},
+		ExcludeExtensions: []string{},
+		IncludeExtensions: []string{},
+		OrderByLang:       false,
+		OrderByFile:       false,
+		OrderByCode:       false,
+		OrderByLine:       false,
+		OrderByBlank:      false,
+		OrderByComment:    false,
+		Order:             "DESC",
+		OutputName:        outputFileName,
+		OutputPath:        DestinationResult,
+		ReportFormats:     []string{"json"},
+	}
+	gc, err := gcloc.NewGCloc(params, constants.Languages)
+	if err != nil {
+		fmt.Println("\nError Analyse Repositories: ", err)
+		os.Exit(1)
+	}
+
+	gc.Run()
+	cpt++
+
+	return cpt
+}
+
+func main() {
+
+	var config1 Configuration
+	var AppConfig = GetConfig(config1)
+	var largestLineCounter int
+	var nameRepos2 string
+	var NumberRepos int
+
+	pwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	DestinationResult := pwd + "/Results"
+	_, err = os.Stat(DestinationResult)
+	if err == nil {
+		err := os.RemoveAll(DestinationResult)
 		if err != nil {
-			fmt.Println("Error:", err)
-			return
+			fmt.Printf("Error deleting directory: %s\n", err)
+			os.Exit(1)
 		}
-		fmt.Printf("\nAnalyse Repositories in Organization: %s\n", AppConfig.Organization)
-		for _, repo := range repositories {
-			fmt.Printf("\nAnalyse Repository : %s\n", repo.Name)
+		if err := os.MkdirAll(DestinationResult, os.ModePerm); err != nil {
+			panic(err)
+		}
 
-			pathToScan := fmt.Sprintf("git::https://%s@%s.com/%s/%s", AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, repo.Name)
-			outputFileName := fmt.Sprintf("Result_%s", repo.Name)
+	} else if os.IsNotExist(err) {
+		if err := os.MkdirAll(DestinationResult, os.ModePerm); err != nil {
+			panic(err)
+		}
 
-			params := gcloc.Params{
-				Path:              pathToScan,
-				ByFile:            false,
-				ExcludePaths:      []string{},
-				ExcludeExtensions: []string{},
-				IncludeExtensions: []string{},
-				OrderByLang:       false,
-				OrderByFile:       false,
-				OrderByCode:       false,
-				OrderByLine:       false,
-				OrderByBlank:      false,
-				OrderByComment:    false,
-				Order:             "DESC",
-				OutputName:        outputFileName,
-				OutputPath:        DestinationResult,
-				ReportFormats:     []string{"json"},
-			}
+	}
 
-			gc, err := gcloc.NewGCloc(params, constants.Languages)
+	GlobalReport := DestinationResult + "/GobalReport.txt"
+	// Create Global Report File
+	file, err := os.Create(GlobalReport)
+	if err != nil {
+		fmt.Println("Error creating file:", err)
+		return
+	}
+	defer file.Close()
+
+	// Test whether the analysis is for one or several repositories AppConfig.Repos != 0 -> 1 repository else more
+	// Analyse 1 repository
+	if len(AppConfig.Repos) != 0 {
+		fmt.Printf("\nAnalyse %s Repository %s in Organization: %s\n", AppConfig.DevOps, AppConfig.Repos, AppConfig.Organization)
+		NumberRepos = AnalyseRepo(DestinationResult, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, AppConfig.Repos)
+
+	} else {
+		// Analyse more repositories
+
+		switch devops := AppConfig.DevOps; devops {
+		case "github":
+			repositories, err := getgithub.GetRepoGithubList(AppConfig.AccessToken, AppConfig.Organization)
 			if err != nil {
-				fmt.Println("Error:", err)
+				fmt.Printf("Error Get Info Repositories in organization %s : %s", AppConfig.Organization, err)
+				return
 			}
+			//elementSize := unsafe.Sizeof(repositories[0])
+			NumberRepos1 := uintptr(len(repositories))
+			fmt.Printf("\nAnalyse %s Repositories(%d) in Organization: %s\n", AppConfig.DevOps, NumberRepos1, AppConfig.Organization)
 
-			gc.Run()
-			cpt++
+			NumberRepos = AnalyseReposList(DestinationResult, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, repositories)
+
+		case "gitlab":
+			repositories, err := getgitlab.GetRepoGitlabList(AppConfig.AccessToken, AppConfig.Organization)
 
 		}
+
 	}
 
 	spin := spinner.New(spinner.CharSets[35], 100*time.Millisecond, spinner.WithWriter(os.Stderr))
@@ -203,8 +253,8 @@ func main() {
 	p := message.NewPrinter(language.English)
 	s := strings.Replace(p.Sprintf("%d", largestLineCounter), ",", " ", -1)
 
-	message0 := fmt.Sprintf("Number of Repository in Organization %s is %d \n", AppConfig.Organization, cpt)
-	message1 := fmt.Sprintf("In Organization %s the largest number of line of code is %s and the repository is %s\n\nReports are located in the Results directory", AppConfig.Organization, s, nameRepos2)
+	message0 := fmt.Sprintf("Number of Repository in Organization %s is %d \n", AppConfig.Organization, NumberRepos)
+	message1 := fmt.Sprintf("In Organization %s the largest number of line of code is <%s> and the repository is <%s>\n\nReports are located in the Results directory", AppConfig.Organization, s, nameRepos2)
 	message2 := message0 + message1
 	fmt.Println(message0)
 	fmt.Println(message1)

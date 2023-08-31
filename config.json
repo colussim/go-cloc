@@ -1,6 +1,7 @@
 {
-    "AccessToken": "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",
-    "Organization": "SonarSource-Demos",
-    "DevOps": "github",
-    "Repos": ""
+    "AccessToken": "glpat-YRBQEA6og8ZaFwVXD_jE",
+    "Organization": "demos66",
+    "DevOps": "gitlab",
+    "Repos": "demostests/vulpy"
+
 }
