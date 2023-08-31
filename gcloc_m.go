@@ -39,6 +39,41 @@ type Report struct {
 	Results         interface{}
 }
 
+type Repository struct {
+	Name          string `json:"name"`
+	DefaultBranch string `json:"default_branch"`
+}
+
+func ConvertSourceToTarget(source SourceStruct) TargetStruct {
+	return TargetStruct{
+		FullName: source.Name,
+		YearsOld: source.Age,
+	}
+}
+
+type Repository1 interface {
+	GetName() string
+}
+
+type GithubRepository struct {
+	Name          string `json:"name"`
+	DefaultBranch string `json:"default_branch"`
+}
+
+func (r GithubRepository) GetName() string {
+	return "GitHub: " + r.Name
+}
+
+// Implémentation pour getgitlab.Repository
+type GitlabRepository struct {
+	Name          string `json:"name"`
+	DefaultBranch string `json:"default_branch"`
+}
+
+func (r GitlabRepository) GetName() string {
+	return "GitLab: " + r.Name
+}
+
 const messagelog = "Error:"
 
 // Read Config file : Config.json
@@ -71,7 +106,7 @@ func parseJSONFile(filePath, reponame string) int {
 	return report.TotalCodeLines
 }
 
-func AnalyseReposList(DestinationResult string, AccessToken string, DevOps string, Organization string, repolist []getgithub.Repository) (cpt int) {
+func AnalyseReposList(DestinationResult string, AccessToken string, DevOps string, Organization string, repolist []Repository) (cpt int) {
 
 	for _, repo := range repolist {
 		fmt.Printf("\nAnalyse Repository : %s\n", repo.Name)
@@ -211,14 +246,38 @@ func main() {
 				fmt.Printf("Error Get Info Repositories in organization %s : %s", AppConfig.Organization, err)
 				return
 			}
-			//elementSize := unsafe.Sizeof(repositories[0])
+			var repoList []Repository
+			for _, repo := range repositories {
+				repoItem := GithubRepository{
+					// Copiez les champs appropriés depuis repo
+					// Exemple : Name: repo.Name, Description: repo.Description, ...
+					Name:          repo.Name,
+					DefaultBranch: repo.DefaultBranch,
+				}
+				repoList = append(repoList, repoItem)
+			}
+
 			NumberRepos1 := uintptr(len(repositories))
 			fmt.Printf("\nAnalyse %s Repositories(%d) in Organization: %s\n", AppConfig.DevOps, NumberRepos1, AppConfig.Organization)
 
-			NumberRepos = AnalyseReposList(DestinationResult, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, repositories)
+			NumberRepos = AnalyseReposList(DestinationResult, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, repoList)
 
 		case "gitlab":
 			repositories, err := getgitlab.GetRepoGitlabList(AppConfig.AccessToken, AppConfig.Organization)
+			if err != nil {
+				fmt.Printf("Error Get Info Repositories in organization %s : %s", AppConfig.Organization, err)
+				return
+			}
+			var repoList []Repository
+			for _, repo := range repositories {
+				repoItem := GitlabRepository{}
+				repoList = append(repoList, repoItem)
+			}
+
+			NumberRepos1 := uintptr(len(repositories))
+			fmt.Printf("\nAnalyse %s Repositories(%d) in Organization: %s\n", AppConfig.DevOps, NumberRepos1, AppConfig.Organization)
+
+			NumberRepos = AnalyseReposList(DestinationResult, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, repoList)
 
 		}
 
