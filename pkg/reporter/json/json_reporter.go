@@ -3,7 +3,7 @@ package json
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -94,12 +94,13 @@ func (j JsonReporter) writeJson(jsonReport *report) error {
 	}
 
 	outputName := j.OutputName
+	fmt.Print(outputName)
 	if !strings.HasSuffix(outputName, ".json") {
 		outputName += ".json"
 	}
 
 	path := filepath.Join(j.OutputPath, outputName)
-	if err := ioutil.WriteFile(path, file, 0644); err != nil {
+	if err := os.WriteFile(path, file, 0644); err != nil {
 		return err
 	}
 
