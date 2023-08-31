@@ -46,7 +46,7 @@ func FetchRepositories(url string, page int) ([]Repository, string, error) {
 }
 
 // Get Infos for 1 Repository in Organization for Main Branch
-func GetRepository(accessToken, organization, repos string) (*Repository, error) {
+func GetRepoGithub(accessToken, organization, repos string) (*Repository, error) {
 	var repo Repository
 
 	url := fmt.Sprintf("%s/repos/%s/%s", baseURL, organization, repos)
@@ -72,13 +72,12 @@ func GetRepository(accessToken, organization, repos string) (*Repository, error)
 }
 
 // Get Infos for all Repositories in Organization for Main Branch
-func GetRepositoryList(accessToken, organization string) ([]Repository, error) {
+func GetRepoGithubList(accessToken, organization string) ([]Repository, error) {
 	var url = ""
 	var repositories []Repository
 
 	url = fmt.Sprintf("%s/orgs/%s/repos", baseURL, organization)
 
-	fmt.Println("URL:", url)
 	page := 1
 	for {
 		repos, nextPageURL, err := FetchRepositories(url, page)
