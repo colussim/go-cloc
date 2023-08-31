@@ -10,8 +10,8 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/colussim/go-cloc/internal/constants"
+	"github.com/colussim/go-cloc/pkg/devops/getgithub"
 	"github.com/colussim/go-cloc/pkg/gcloc"
-	"github.com/colussim/go-cloc/pkg/getgithub"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
