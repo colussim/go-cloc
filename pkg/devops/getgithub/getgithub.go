@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const baseURL = "https://api.github.com/"
+const baseURL = "https://api.github.com"
 
 type Repository struct {
 	Name          string `json:"name"`
