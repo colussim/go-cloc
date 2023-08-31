@@ -96,7 +96,7 @@ func main() {
 
 	if len(AppConfig.Repos) != 0 {
 
-		repositories, err := getgithub.GetRepository(AppConfig.AccessToken, AppConfig.Organization, AppConfig.DevOps, AppConfig.Repos)
+		repositories, err := getgithub.GetRepository(AppConfig.AccessToken, AppConfig.Organization, AppConfig.Repos)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
@@ -133,7 +133,7 @@ func main() {
 		cpt++
 
 	} else {
-		repositories, err := getgithub.GetRepositoryList(AppConfig.AccessToken, AppConfig.Organization, AppConfig.DevOps)
+		repositories, err := getgithub.GetRepositoryList(AppConfig.AccessToken, AppConfig.Organization)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
