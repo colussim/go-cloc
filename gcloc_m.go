@@ -3,15 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"getgithub"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/colussim/go-cloc/internal/constants"
 	"github.com/colussim/go-cloc/pkg/gcloc"
-	"github.com/briandowns/spinner"
+	"github.com/colussim/go-cloc/pkg/getgithub"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
