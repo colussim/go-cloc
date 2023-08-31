@@ -78,6 +78,7 @@ func GetRepositoryList(accessToken, organization string) ([]Repository, error) {
 
 	url = fmt.Sprintf("%s/orgs/%s/repos", baseURL, organization)
 
+	fmt.Println("URL:", url)
 	page := 1
 	for {
 		repos, nextPageURL, err := FetchRepositories(url, page)
