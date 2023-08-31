@@ -1,6 +1,6 @@
 module github.com/colussim/go-cloc
 
-go 1.19
+go 1.21
 
 require (
 	github.com/briandowns/spinner v1.18.1
