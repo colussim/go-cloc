@@ -94,7 +94,6 @@ func (j JsonReporter) writeJson(jsonReport *report) error {
 	}
 
 	outputName := strings.Replace(j.OutputName, "/", "_", -1)
-	fmt.Println(outputName)
 	if !strings.HasSuffix(outputName, ".json") {
 		outputName += ".json"
 	}
