@@ -3,6 +3,7 @@ package getgitlab
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -13,6 +14,7 @@ const baseURL = "gitlab.com/api/v4"
 type Repository struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
+	Path          string `json:"path"`
 }
 
 /*func FetchRepositories2(url string, page int) ([]Repository, error) {
@@ -34,6 +36,8 @@ type Repository struct {
 // Browsing number of pages
 func FetchRepositories2(url string, page int, accessToken string) ([]Repository, string, error) {
 
+	var repos []Repository
+
 	resp, err := http.Get(fmt.Sprintf("%s?page=%d", url, page))
 	if err != nil {
 		return nil, "", err
@@ -42,12 +46,20 @@ func FetchRepositories2(url string, page int, accessToken string) ([]Repository,
 
 	defer resp.Body.Close()
 
-	var repos []Repository
-	err = json.NewDecoder(resp.Body).Decode(&repos)
+	body, _ := io.ReadAll(resp.Body)
+
+	//var repositories []Repository
+	err = json.Unmarshal(body, &repos)
 	if err != nil {
-		fmt.Print("Stack: getgitlab.FetchRepositories2 -- :")
+		fmt.Print("-- Stack: getgitlab.FetchRepositories2 -- ")
 		return nil, "", err
 	}
+
+	/*	err = json.NewDecoder(resp.Body).Decode(&repos)
+		if err != nil {
+			fmt.Print("-- Stack: getgitlab.FetchRepositories2 -- ")
+			return nil, "", err
+		}*/
 
 	nextPageURL := ""
 	linkHeader := resp.Header.Get("Link")
@@ -70,7 +82,6 @@ func GetRepoGitlabList(accessToken, organization string) ([]Repository, error) {
 	var repositories []Repository
 
 	url = fmt.Sprintf("https://%s@%s/groups/%s/projects?include_subgroups=true", accessToken, baseURL, organization)
-	fmt.Print(url)
 
 	page := 1
 	for {
