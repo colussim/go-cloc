@@ -32,11 +32,14 @@ type Repository struct {
 }*/
 
 // Browsing number of pages
-func FetchRepositories2(url string, page int) ([]Repository, string, error) {
+func FetchRepositories2(url string, page int, accessToken string) ([]Repository, string, error) {
+
 	resp, err := http.Get(fmt.Sprintf("%s?page=%d", url, page))
 	if err != nil {
 		return nil, "", err
 	}
+	resp.Header.Add("Authorization", "Bearer "+accessToken)
+
 	defer resp.Body.Close()
 
 	var repos []Repository
@@ -70,7 +73,7 @@ func GetRepoGitlabList(accessToken, organization string) ([]Repository, error) {
 
 	page := 1
 	for {
-		repos, nextPageURL, err := FetchRepositories2(url, page)
+		repos, nextPageURL, err := FetchRepositories2(url, page, accessToken)
 		if err != nil {
 			log.Fatal(err)
 		}
