@@ -45,6 +45,7 @@ func FetchRepositories2(url string, page int, accessToken string) ([]Repository,
 	var repos []Repository
 	err = json.NewDecoder(resp.Body).Decode(&repos)
 	if err != nil {
+		fmt.Print("Stack: getgitlab.FetchRepositories2 -- :")
 		return nil, "", err
 	}
 
