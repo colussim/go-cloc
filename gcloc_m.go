@@ -20,6 +20,7 @@ import (
 type Repository struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
+	Path          string `json:"path"`
 }
 
 // Declare a struct for Config fields
@@ -39,39 +40,36 @@ type Report struct {
 	Results         interface{}
 }
 
-type Repository struct {
-	Name          string `json:"name"`
-	DefaultBranch string `json:"default_branch"`
-}
-
-func ConvertSourceToTarget(source SourceStruct) TargetStruct {
-	return TargetStruct{
-		FullName: source.Name,
-		YearsOld: source.Age,
-	}
-}
-
 type Repository1 interface {
 	GetName() string
+	GetPath() string
 }
 
 type GithubRepository struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
+	Path          string `json:"full_name"`
 }
 
 func (r GithubRepository) GetName() string {
-	return "GitHub: " + r.Name
+	return r.Name
+}
+func (r GithubRepository) GetPath() string {
+	return r.Path
 }
 
 // Implémentation pour getgitlab.Repository
 type GitlabRepository struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
+	Path          string `json:"path_with_namespace"`
 }
 
 func (r GitlabRepository) GetName() string {
-	return "GitLab: " + r.Name
+	return r.Name
+}
+func (r GitlabRepository) GetPath() string {
+	return r.Path
 }
 
 const messagelog = "Error:"
@@ -106,13 +104,15 @@ func parseJSONFile(filePath, reponame string) int {
 	return report.TotalCodeLines
 }
 
-func AnalyseReposList(DestinationResult string, AccessToken string, DevOps string, Organization string, repolist []Repository) (cpt int) {
+func AnalyseReposList(DestinationResult string, AccessToken string, DevOps string, Organization string, repolist []Repository1) (cpt int) {
 
 	for _, repo := range repolist {
-		fmt.Printf("\nAnalyse Repository : %s\n", repo.Name)
+		fmt.Printf("\nAnalyse Repository : %s\n", repo.GetName())
 
-		pathToScan := fmt.Sprintf("git::https://%s@%s.com/%s/%s", AccessToken, DevOps, Organization, repo.Name)
-		outputFileName := fmt.Sprintf("Result_%s", repo.Name)
+		pathToScan := fmt.Sprintf("git::https://%s@%s.com/%s", AccessToken, DevOps, repo.GetPath())
+		outputFileName := fmt.Sprintf("Result_%s", repo.GetName())
+
+		fmt.Println(pathToScan)
 
 		params := gcloc.Params{
 			Path:              pathToScan,
@@ -160,7 +160,6 @@ func AnalyseRepo(DestinationResult string, AccessToken string, DevOps string, Or
 	pathToScan := fmt.Sprintf("git::https://%s@%s.com/%s/%s", AccessToken, DevOps, Organization, reponame)
 
 	outputFileName := fmt.Sprintf("Result_%s", reponame)
-	fmt.Println("URL :", pathToScan)
 	params := gcloc.Params{
 		Path:              pathToScan,
 		ByFile:            false,
@@ -246,13 +245,16 @@ func main() {
 				fmt.Printf("Error Get Info Repositories in organization %s : %s", AppConfig.Organization, err)
 				return
 			}
-			var repoList []Repository
+			var repoList []Repository1
+
 			for _, repo := range repositories {
+
 				repoItem := GithubRepository{
 					// Copiez les champs appropriés depuis repo
 					// Exemple : Name: repo.Name, Description: repo.Description, ...
 					Name:          repo.Name,
 					DefaultBranch: repo.DefaultBranch,
+					Path:          repo.Path,
 				}
 				repoList = append(repoList, repoItem)
 			}
@@ -268,9 +270,16 @@ func main() {
 				fmt.Printf("Error Get Info Repositories in organization %s : %s", AppConfig.Organization, err)
 				return
 			}
-			var repoList []Repository
+
+			var repoList []Repository1
 			for _, repo := range repositories {
-				repoItem := GitlabRepository{}
+				repoItem := GitlabRepository{
+					// Copiez les champs appropriés depuis repo
+					// Exemple : Name: repo.Name, Description: repo.Description, ...
+					Name:          repo.Name,
+					DefaultBranch: repo.DefaultBranch,
+					Path:          repo.Path,
+				}
 				repoList = append(repoList, repoItem)
 			}
 

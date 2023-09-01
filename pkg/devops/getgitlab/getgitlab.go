@@ -11,55 +11,37 @@ import (
 
 const baseURL = "gitlab.com/api/v4"
 
-type Repository []struct {
+type Repository struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
-	Path          string `json:"path"`
+	Path          string `json:"path_with_namespace"`
 }
 
-/*func FetchRepositories2(url string, page int) ([]Repository, error) {
-	resp, err := http.Get(fmt.Sprintf("%s?page=%d", url, page))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var repos []Repository
-	err = json.NewDecoder(resp.Body).Decode(&repos)
-	if err != nil {
-		return nil, err
-	}
-
-	return repos, nil
-}*/
-
-// Browsing number of pages
-func FetchRepositories2(url string, page int, accessToken string) ([]Repository, string, error) {
+func FetchRepositoriesGitlab(url string, page int, accessToken string) ([]Repository, string, error) {
 
 	var repos []Repository
 
-	resp, err := http.Get(fmt.Sprintf("%s?page=%d", url, page))
+	url1 := fmt.Sprintf("%s&page=%d", url, page)
+
+	req, _ := http.NewRequest("GET", url1, nil)
+	req.Header.Set("Authorization", ""+accessToken+":")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Print("-- Stack: getgitlab.FetchRepositoriesGitlab Request API -- ")
 		return nil, "", err
 	}
-	//resp.Header.Add("Authorization", "Bearer "+accessToken)
 
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
 
-	//var repositories []Repository
 	err = json.Unmarshal(body, &repos)
 	if err != nil {
-		fmt.Print("-- Stack: getgitlab.FetchRepositories2 -- ")
+		fmt.Print("-- Stack: getgitlab.FetchRepositoriesGitlab JSON Load -- ")
 		return nil, "", err
 	}
-
-	/*	err = json.NewDecoder(resp.Body).Decode(&repos)
-		if err != nil {
-			fmt.Print("-- Stack: getgitlab.FetchRepositories2 -- ")
-			return nil, "", err
-		}*/
 
 	nextPageURL := ""
 	linkHeader := resp.Header.Get("Link")
@@ -85,7 +67,7 @@ func GetRepoGitlabList(accessToken, organization string) ([]Repository, error) {
 
 	page := 1
 	for {
-		repos, nextPageURL, err := FetchRepositories2(url, page, accessToken)
+		repos, nextPageURL, err := FetchRepositoriesGitlab(url, page, accessToken)
 		if err != nil {
 			log.Fatal(err)
 		}

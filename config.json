@@ -1,7 +1,7 @@
 {
-    "AccessToken": "glpat-YRBQEA6og8ZaFwVXD_jE",
-    "Organization": "demos66",
-    "DevOps": "gitlab",
-    "Repos": "demostests/vulpy"
+    "AccessToken": "",
+    "Organization": "SonarSource",
+    "DevOps": "github",
+    "Repos": ""
 
 }

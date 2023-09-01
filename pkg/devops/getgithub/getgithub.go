@@ -9,24 +9,37 @@ import (
 	"strings"
 )
 
-const baseURL = "https://api.github.com"
+const baseURL = "api.github.com"
 
 type Repository struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
+	Path          string `json:"full_name"`
 }
 
 // Browsing number of pages
-func FetchRepositories(url string, page int) ([]Repository, string, error) {
-	resp, err := http.Get(fmt.Sprintf("%s?page=%d", url, page))
-	if err != nil {
-		return nil, "", err
-	}
-	defer resp.Body.Close()
+func FetchRepositoriesGithub(url string, page int, accessToken string) ([]Repository, string, error) {
 
 	var repos []Repository
-	err = json.NewDecoder(resp.Body).Decode(&repos)
+	url1 := fmt.Sprintf("%s&page=%d", url, page)
+
+	req, _ := http.NewRequest("GET", url1, nil)
+	req.Header.Set("Authorization", ""+accessToken+":")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Print("-- Stack: getgithub.FetchRepositories Request API -- ")
+		return nil, "", err
+	}
+
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+
+	err = json.Unmarshal(body, &repos)
+	if err != nil {
+		fmt.Print("-- Stack: getgithub.FetchRepositories JSON Load -- ")
 		return nil, "", err
 	}
 
@@ -45,42 +58,16 @@ func FetchRepositories(url string, page int) ([]Repository, string, error) {
 	return repos, nextPageURL, nil
 }
 
-// Get Infos for 1 Repository in Organization for Main Branch
-func GetRepoGithub(accessToken, organization, repos string) (*Repository, error) {
-	var repo Repository
-
-	url := fmt.Sprintf("%s/repos/%s/%s", baseURL, organization, repos)
-
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-
-	err = json.Unmarshal(body, &repo)
-	if err != nil {
-		return nil, err
-	}
-
-	return &repo, nil
-}
-
 // Get Infos for all Repositories in Organization for Main Branch
 func GetRepoGithubList(accessToken, organization string) ([]Repository, error) {
 	var url = ""
 	var repositories []Repository
 
-	url = fmt.Sprintf("%s/orgs/%s/repos", baseURL, organization)
+	url = fmt.Sprintf("https://%s/orgs/%s/repos?type=all&recurse_submodules=false", baseURL, organization)
 
 	page := 1
 	for {
-		repos, nextPageURL, err := FetchRepositories(url, page)
+		repos, nextPageURL, err := FetchRepositoriesGithub(url, page, accessToken)
 		if err != nil {
 			log.Fatal(err)
 		}
