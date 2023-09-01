@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const baseURL = "https://gitlab.com/api/v4"
+const baseURL = "gitlab.com/api/v4"
 
 type Repository struct {
 	Name          string `json:"name"`
@@ -38,7 +38,7 @@ func FetchRepositories2(url string, page int, accessToken string) ([]Repository,
 	if err != nil {
 		return nil, "", err
 	}
-	resp.Header.Add("Authorization", "Bearer "+accessToken)
+	//resp.Header.Add("Authorization", "Bearer "+accessToken)
 
 	defer resp.Body.Close()
 
@@ -68,7 +68,7 @@ func GetRepoGitlabList(accessToken, organization string) ([]Repository, error) {
 	var url = ""
 	var repositories []Repository
 
-	url = fmt.Sprintf("%s/groups/%s/projects?include_subgroups=true", baseURL, organization)
+	url = fmt.Sprintf("https://%s@%s/groups/%s/projects?include_subgroups=true", accessToken, baseURL, organization)
 	fmt.Print(url)
 
 	page := 1
