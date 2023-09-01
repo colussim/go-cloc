@@ -11,7 +11,7 @@ import (
 
 const baseURL = "gitlab.com/api/v4"
 
-type Repository struct {
+type Repository []struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
 	Path          string `json:"path"`
