@@ -66,6 +66,7 @@ func GetRepoGitlabList(accessToken, organization string) ([]Repository, error) {
 	var repositories []Repository
 
 	url = fmt.Sprintf("%s/groups/%s/projects?include_subgroups=true", baseURL, organization)
+	fmt.Print(url)
 
 	page := 1
 	for {
