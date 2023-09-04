@@ -15,6 +15,7 @@ type Repository struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
 	Path          string `json:"path_with_namespace"`
+	Empty         bool   `json:"empty_repo"`
 }
 
 func FetchRepositoriesGitlab(url string, page int, accessToken string) ([]Repository, string, error) {

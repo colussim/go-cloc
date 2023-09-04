@@ -6,7 +6,7 @@ import (
 	"github.com/colussim/go-cloc/pkg/analyzer"
 	"github.com/colussim/go-cloc/pkg/filesystem"
 	"github.com/colussim/go-cloc/pkg/gcloc/language"
-	"github.com/colussim/go-cloc/pkg/getter"
+	"github.com/colussim/go-cloc/pkg/gogit"
 	"github.com/colussim/go-cloc/pkg/reporter"
 	"github.com/colussim/go-cloc/pkg/reporter/json"
 	"github.com/colussim/go-cloc/pkg/reporter/prompt"
@@ -39,10 +39,11 @@ type GCloc struct {
 	scanner   *scanner.Scanner
 	sorter    sorter.Sorter
 	reporters []reporter.Reporter
+	Repopath  string
 }
 
 func NewGCloc(params Params, languages language.Languages) (*GCloc, error) {
-	path, err := getter.Getter(params.Path)
+	path, err := gogit.Getrepos(params.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +73,7 @@ func NewGCloc(params Params, languages language.Languages) (*GCloc, error) {
 		scanner:   scanner,
 		sorter:    sorter,
 		reporters: reporters,
+		Repopath:  path,
 	}, nil
 }
 

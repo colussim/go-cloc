@@ -15,6 +15,7 @@ type Repository struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
 	Path          string `json:"full_name"`
+	SizeR         int64  `json:"size"`
 }
 
 // Browsing number of pages
