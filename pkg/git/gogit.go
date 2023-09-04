@@ -12,7 +12,7 @@ import (
 	git "github.com/go-git/go-git/v5"
 )
 
-func Getter(src string) (string, error) {
+func Getrepos(src string) (string, error) {
 	spinner := newSpinner(fmt.Sprintf(" Extracting files from %s", src))
 	spinner.Start()
 	defer spinner.Stop()
