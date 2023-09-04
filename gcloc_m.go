@@ -25,10 +25,12 @@ type Repository struct {
 
 // Declare a struct for Config fields
 type Configuration struct {
+	Users        string
 	AccessToken  string
 	Organization string
 	DevOps       string
 	Repos        string
+	Branch       string
 }
 
 type Report struct {
@@ -49,6 +51,7 @@ type GithubRepository struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
 	Path          string `json:"full_name"`
+	SizeR         int64  `json:"size"`
 }
 
 func (r GithubRepository) GetName() string {
@@ -63,6 +66,7 @@ type GitlabRepository struct {
 	Name          string `json:"name"`
 	DefaultBranch string `json:"default_branch"`
 	Path          string `json:"path_with_namespace"`
+	Empty         bool   `json:"empty_repo"`
 }
 
 func (r GitlabRepository) GetName() string {
@@ -104,15 +108,13 @@ func parseJSONFile(filePath, reponame string) int {
 	return report.TotalCodeLines
 }
 
-func AnalyseReposList(DestinationResult string, AccessToken string, DevOps string, Organization string, repolist []Repository1) (cpt int) {
+func AnalyseReposList(DestinationResult string, Users string, AccessToken string, DevOps string, Organization string, repolist []Repository1) (cpt int) {
 
 	for _, repo := range repolist {
 		fmt.Printf("\nAnalyse Repository : %s\n", repo.GetName())
 
-		pathToScan := fmt.Sprintf("git::https://%s@%s.com/%s", AccessToken, DevOps, repo.GetPath())
+		pathToScan := fmt.Sprintf("https://%s:%s@%s.com/%s", Users, AccessToken, DevOps, repo.GetPath())
 		outputFileName := fmt.Sprintf("Result_%s", repo.GetName())
-
-		fmt.Println(pathToScan)
 
 		params := gcloc.Params{
 			Path:              pathToScan,
@@ -141,6 +143,13 @@ func AnalyseReposList(DestinationResult string, AccessToken string, DevOps strin
 		gc.Run()
 		cpt++
 
+		// Remove Repository Directory
+		err1 := os.RemoveAll(gc.Repopath)
+		if err != nil {
+			fmt.Printf("Error deleting Repository Directory: %v\n", err1)
+			return
+		}
+
 	}
 	return cpt
 }
@@ -155,9 +164,10 @@ func AnalyseRun(params gcloc.Params, reponame string) {
 	gc.Run()
 }
 
-func AnalyseRepo(DestinationResult string, AccessToken string, DevOps string, Organization string, reponame string) (cpt int) {
+func AnalyseRepo(DestinationResult string, Users string, AccessToken string, DevOps string, Organization string, reponame string) (cpt int) {
 
-	pathToScan := fmt.Sprintf("git::https://%s@%s.com/%s/%s", AccessToken, DevOps, Organization, reponame)
+	//pathToScan := fmt.Sprintf("git::https://%s@%s.com/%s/%s", AccessToken, DevOps, Organization, reponame)
+	pathToScan := fmt.Sprintf("https://%s:%s@%s.com/%s/%s", Users, AccessToken, DevOps, Organization, reponame)
 
 	outputFileName := fmt.Sprintf("Result_%s", reponame)
 	params := gcloc.Params{
@@ -185,6 +195,13 @@ func AnalyseRepo(DestinationResult string, AccessToken string, DevOps string, Or
 
 	gc.Run()
 	cpt++
+
+	// Remove Repository Directory
+	err1 := os.RemoveAll(gc.Repopath)
+	if err != nil {
+		fmt.Printf("Error deleting Repository Directory: %v\n", err1)
+		return
+	}
 
 	return cpt
 }
@@ -220,7 +237,7 @@ func main() {
 
 	}
 
-	GlobalReport := DestinationResult + "/GobalReport.txt"
+	GlobalReport := DestinationResult + "/GlobalReport.txt"
 	// Create Global Report File
 	file, err := os.Create(GlobalReport)
 	if err != nil {
@@ -233,13 +250,14 @@ func main() {
 	// Analyse 1 repository
 	if len(AppConfig.Repos) != 0 {
 		fmt.Printf("\nAnalyse %s Repository %s in Organization: %s\n", AppConfig.DevOps, AppConfig.Repos, AppConfig.Organization)
-		NumberRepos = AnalyseRepo(DestinationResult, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, AppConfig.Repos)
+		NumberRepos = AnalyseRepo(DestinationResult, AppConfig.Users, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, AppConfig.Repos)
 
 	} else {
 		// Analyse more repositories
 
 		switch devops := AppConfig.DevOps; devops {
 		case "github":
+			var EmptyR = 0
 			repositories, err := getgithub.GetRepoGithubList(AppConfig.AccessToken, AppConfig.Organization)
 			if err != nil {
 				fmt.Printf("Error Get Info Repositories in organization %s : %s", AppConfig.Organization, err)
@@ -250,21 +268,26 @@ func main() {
 			for _, repo := range repositories {
 
 				repoItem := GithubRepository{
-					// Copiez les champs appropriés depuis repo
-					// Exemple : Name: repo.Name, Description: repo.Description, ...
 					Name:          repo.Name,
 					DefaultBranch: repo.DefaultBranch,
 					Path:          repo.Path,
+					SizeR:         repo.SizeR,
 				}
-				repoList = append(repoList, repoItem)
+				if repo.SizeR > 0 {
+					repoList = append(repoList, repoItem)
+				} else {
+					fmt.Println("\nRepository %s in Organization: %s is not Analyse because it is empty\n", repo.Name, AppConfig.Organization)
+					EmptyR = EmptyR + 1
+				}
 			}
 
-			NumberRepos1 := uintptr(len(repositories))
+			NumberRepos1 := int(uintptr(len(repositories))) - EmptyR
 			fmt.Printf("\nAnalyse %s Repositories(%d) in Organization: %s\n", AppConfig.DevOps, NumberRepos1, AppConfig.Organization)
 
-			NumberRepos = AnalyseReposList(DestinationResult, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, repoList)
+			NumberRepos = AnalyseReposList(DestinationResult, AppConfig.Users, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, repoList)
 
 		case "gitlab":
+			var EmptyR = 0
 			repositories, err := getgitlab.GetRepoGitlabList(AppConfig.AccessToken, AppConfig.Organization)
 			if err != nil {
 				fmt.Printf("Error Get Info Repositories in organization %s : %s", AppConfig.Organization, err)
@@ -274,19 +297,23 @@ func main() {
 			var repoList []Repository1
 			for _, repo := range repositories {
 				repoItem := GitlabRepository{
-					// Copiez les champs appropriés depuis repo
-					// Exemple : Name: repo.Name, Description: repo.Description, ...
 					Name:          repo.Name,
 					DefaultBranch: repo.DefaultBranch,
 					Path:          repo.Path,
+					Empty:         repo.Empty,
 				}
-				repoList = append(repoList, repoItem)
+				if !repo.Empty {
+					repoList = append(repoList, repoItem)
+				} else {
+					fmt.Printf("\nRepository %s in Organization: %s is not Analyse because it is empty\n", repo.Name, AppConfig.Organization)
+					EmptyR = EmptyR + 1
+				}
 			}
 
-			NumberRepos1 := uintptr(len(repositories))
+			NumberRepos1 := int(uintptr(len(repositories))) - EmptyR
 			fmt.Printf("\nAnalyse %s Repositories(%d) in Organization: %s\n", AppConfig.DevOps, NumberRepos1, AppConfig.Organization)
 
-			NumberRepos = AnalyseReposList(DestinationResult, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, repoList)
+			NumberRepos = AnalyseReposList(DestinationResult, AppConfig.Users, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, repoList)
 
 		}
 
@@ -321,7 +348,7 @@ func main() {
 	p := message.NewPrinter(language.English)
 	s := strings.Replace(p.Sprintf("%d", largestLineCounter), ",", " ", -1)
 
-	message0 := fmt.Sprintf("Number of Repository in Organization %s is %d \n", AppConfig.Organization, NumberRepos)
+	message0 := fmt.Sprintf("\nNumber of Repository analyzed in Organization %s is %d \n", AppConfig.Organization, NumberRepos)
 	message1 := fmt.Sprintf("In Organization %s the largest number of line of code is <%s> and the repository is <%s>\n\nReports are located in the Results directory", AppConfig.Organization, s, nameRepos2)
 	message2 := message0 + message1
 	fmt.Println(message0)
