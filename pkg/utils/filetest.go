@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -41,4 +42,38 @@ func searchStringInFile(fileexclusion string, target string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func checkCLOCignoreFile(fileexclusion string, target string) (bool, error) {
+
+	if fileExists(fileexclusion) {
+		isEmpty, err := isFileEmpty(fileexclusion)
+		if err != nil {
+			fmt.Println("-- Stack: utils.checkCLOCignoreFile Empty Test .clocignore -- ", err)
+			return false, err
+		}
+
+		if isEmpty {
+			//The file exists but is empty
+			return false, nil
+		} else {
+			//The file exists but is not empty
+			fmt.Println("The file exists but is not empty")
+			found, err := searchStringInFile(fileexclusion, target)
+			if err != nil {
+				fmt.Println("-- Stack: utils.checkCLOCignoreFile search exclusion -- ", err)
+				return false, err
+			}
+
+			if found {
+				fmt.Printf("The string '%s' was found in the file.\n", target)
+				return true, nil
+			} else {
+				return false, nil
+			}
+		}
+	} else {
+		//The file does not exist
+		return false, nil
+	}
 }
