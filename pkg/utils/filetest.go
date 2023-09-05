@@ -44,7 +44,7 @@ func searchStringInFile(fileexclusion string, target string) (bool, error) {
 	return false, nil
 }
 
-func checkCLOCignoreFile(fileexclusion string, target string) (bool, error) {
+func CheckCLOCignoreFile(fileexclusion string, target string) (bool, error) {
 
 	if fileExists(fileexclusion) {
 		isEmpty, err := isFileEmpty(fileexclusion)
