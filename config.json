@@ -1,6 +1,10 @@
 {
+<<<<<<< HEAD
     "Users" : "emmanuel-colussi-sonarsource",
     "AccessToken": "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",
+=======
+    "AccessToken": "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",
+>>>>>>> 0e5fa34a1ecc61215d0defb599e71edc8872f846
     "Organization": "SonarSource",
     "DevOps": "github",
     "Repos": "",

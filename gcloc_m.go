@@ -1,5 +1,6 @@
 package main
 
+
 import (
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"github.com/colussim/go-cloc/pkg/devops/getgithub"
 	"github.com/colussim/go-cloc/pkg/devops/getgitlab"
 	"github.com/colussim/go-cloc/pkg/gcloc"
+	"github.com/colussim/go-cloc/pkg/utils"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -213,6 +215,7 @@ func main() {
 	var largestLineCounter int
 	var nameRepos2 string
 	var NumberRepos int
+	var fileexclusion = ".clocignore"
 
 	pwd, err := os.Getwd()
 	if err != nil {
@@ -260,7 +263,7 @@ func main() {
 			var EmptyR = 0
 			repositories, err := getgithub.GetRepoGithubList(AppConfig.AccessToken, AppConfig.Organization)
 			if err != nil {
-				fmt.Printf("Error Get Info Repositories in organization %s : %s", AppConfig.Organization, err)
+				fmt.Printf("Error Get Info Repositories in organization '%s' : '%s'", AppConfig.Organization, err)
 				return
 			}
 			var repoList []Repository1
@@ -274,15 +277,21 @@ func main() {
 					SizeR:         repo.SizeR,
 				}
 				if repo.SizeR > 0 {
-					repoList = append(repoList, repoItem)
+					ExcludeRepo, _ := utils.CheckCLOCignoreFile(fileexclusion, repo.Name)
+					if !ExcludeRepo {
+						repoList = append(repoList, repoItem)
+					} else {
+						fmt.Printf("\nRepository '%s' in Organization: '%s' is not Analyse because it is excluded\n", repo.Name, AppConfig.Organization)
+						EmptyR = EmptyR + 1
+					}
 				} else {
-					fmt.Println("\nRepository %s in Organization: %s is not Analyse because it is empty\n", repo.Name, AppConfig.Organization)
+					fmt.Print("\nRepository '%s' in Organization: '%s' is not Analyse because it is empty\n", repo.Name, AppConfig.Organization)
 					EmptyR = EmptyR + 1
 				}
 			}
 
 			NumberRepos1 := int(uintptr(len(repositories))) - EmptyR
-			fmt.Printf("\nAnalyse %s Repositories(%d) in Organization: %s\n", AppConfig.DevOps, NumberRepos1, AppConfig.Organization)
+			fmt.Printf("\nAnalyse '%s' Repositories('%d') in Organization: '%s'\n", AppConfig.DevOps, NumberRepos1, AppConfig.Organization)
 
 			NumberRepos = AnalyseReposList(DestinationResult, AppConfig.Users, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, repoList)
 
@@ -290,7 +299,7 @@ func main() {
 			var EmptyR = 0
 			repositories, err := getgitlab.GetRepoGitlabList(AppConfig.AccessToken, AppConfig.Organization)
 			if err != nil {
-				fmt.Printf("Error Get Info Repositories in organization %s : %s", AppConfig.Organization, err)
+				fmt.Printf("Error Get Info Repositories in organization '%s' : '%s'", AppConfig.Organization, err)
 				return
 			}
 
@@ -303,15 +312,21 @@ func main() {
 					Empty:         repo.Empty,
 				}
 				if !repo.Empty {
-					repoList = append(repoList, repoItem)
+					ExcludeRepo, _ := utils.CheckCLOCignoreFile(fileexclusion, repo.Name)
+					if !ExcludeRepo {
+						repoList = append(repoList, repoItem)
+					} else {
+						fmt.Print("\nRepository '%s' in Organization: '%s' is not Analyse because it is excluded\n", repo.Name, AppConfig.Organization)
+						EmptyR = EmptyR + 1
+					}
 				} else {
-					fmt.Printf("\nRepository %s in Organization: %s is not Analyse because it is empty\n", repo.Name, AppConfig.Organization)
+					fmt.Printf("\nRepository '%s' in Organization:'%s' is not Analyse because it is empty\n", repo.Name, AppConfig.Organization)
 					EmptyR = EmptyR + 1
 				}
 			}
 
 			NumberRepos1 := int(uintptr(len(repositories))) - EmptyR
-			fmt.Printf("\nAnalyse %s Repositories(%d) in Organization: %s\n", AppConfig.DevOps, NumberRepos1, AppConfig.Organization)
+			fmt.Printf("\nAnalyse '%s' Repositories('%d') in Organization: '%s'\n", AppConfig.DevOps, NumberRepos1, AppConfig.Organization)
 
 			NumberRepos = AnalyseReposList(DestinationResult, AppConfig.Users, AppConfig.AccessToken, AppConfig.DevOps, AppConfig.Organization, repoList)
 
@@ -348,8 +363,8 @@ func main() {
 	p := message.NewPrinter(language.English)
 	s := strings.Replace(p.Sprintf("%d", largestLineCounter), ",", " ", -1)
 
-	message0 := fmt.Sprintf("\nNumber of Repository analyzed in Organization %s is %d \n", AppConfig.Organization, NumberRepos)
-	message1 := fmt.Sprintf("In Organization %s the largest number of line of code is <%s> and the repository is <%s>\n\nReports are located in the Results directory", AppConfig.Organization, s, nameRepos2)
+	message0 := fmt.Sprintf("\nNumber of Repository analyzed in Organization '%'s is '%d' \n", AppConfig.Organization, NumberRepos)
+	message1 := fmt.Sprintf("In Organization '%s' the largest number of line of code is <'%s'> and the repository is <'%s'>\n\nReports are located in the Results directory", AppConfig.Organization, s, nameRepos2)
 	message2 := message0 + message1
 	fmt.Println(message0)
 	fmt.Println(message1)
