@@ -34,9 +34,17 @@ func Getter(src string) (string, error) {
 		Pwd: pwd,
 		//Mode: getter.ClientModeAny,
 		Mode: getter.ClientModeDir,
+		Detectors: []getter.Detector{
+			&getter.GitHubDetector{},
+		},
+		//provide the getter needed to download the files
+		Getters: map[string]getter.Getter{
+			"git": &getter.GitGetter{},
+		},
 	}
 
 	if err := client.Get(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error getting path %s: %v", client.Src, err)
 		return "", err
 	}
 

@@ -83,5 +83,7 @@ func main() {
 	defer file.Close()
 	pie.Render(chart.PNG, file)
 
+	fmt.Println("Number of Language:", len(totalCodeLinesByLanguage))
+
 	fmt.Println("Doughnut chart saved as doughnut_chart.png")
 }
