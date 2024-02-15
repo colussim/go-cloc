@@ -991,7 +991,6 @@ section {
   font-size: 18px;
   color: #fff;
   font-weight: 600;
-  color: #fff;
   margin-bottom: 0px;
 }
 
@@ -1270,7 +1269,6 @@ section {
   padding: 12px 35px;
   border-radius: 50px;
   color: #47b2e4;
-  transition: none;
   font-size: 16px;
   font-weight: 500;
   font-family: "Jost", sans-serif;
@@ -1548,7 +1546,6 @@ section {
 
 .contact .php-email-form input,
 .contact .php-email-form textarea {
-  border-radius: 0;
   box-shadow: none;
   font-size: 14px;
   border-radius: 4px;
@@ -1679,7 +1676,6 @@ section {
   right: 0;
   bottom: 0;
   border: 0;
-  background: none;
   font-size: 16px;
   padding: 0 20px;
   background: #47b2e4;
